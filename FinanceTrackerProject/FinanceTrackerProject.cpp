@@ -34,9 +34,15 @@ const int MONTHS_MAX_VALUE = 12;
 const int PROFILE_INCOME_INDEX = 0;
 const int PROFILE_EXPENSE_INDEX = 1;
 const int DEFAULT_MONTH_EMPTY_VALUE = 0;
+const char* INCOME_LABEL = "income";
+const char* EXPENSE_LABEL = "expense";
 const char* COMMANDS[] = {
 		"SETUP", "ADD", "REPORT", "SEARCH", "SORT", "FORECAST",
 		"CHART", "EXIT"
+};
+const char* MONTH_NAMES[] = {
+	"January", "February", "March", "April", "May", "June",
+	"July", "August", "September", "October", "November", "December"
 };
 
 bool isLetterLowerCase(const char letter) {
@@ -131,13 +137,64 @@ void setupProfile(double profile[PROFILE_ROW][MONTHS_COUNT], int& profileMonths,
 	std::cout << "Profile created successfully.\n";
 	isProfileSetup = true;
 }
+double readMoneyValue(const char* label) {
+	double value;
+	while (true) {
+		std::cout << "Enter " << label << ": ";
+		std::cin >> value;
+
+		if (isInputInvalid()) continue;
+
+		if (value < 0) {
+			std::cout << "Error: " << label << " cannot be negative!\n";
+			continue;
+		}
+		return value;
+	}
+}
+
+int readTargetMonth(int maxMonths) {
+	int month;
+	while (true) {
+		std::cout << "Enter month (1-" << maxMonths << "): ";
+		std::cin >> month;
+
+		if (isInputInvalid()) continue;
+
+		if (month < 1 || month > maxMonths) {
+			std::cout << "Error: Month must be between 1 and " << maxMonths << ".\n";
+			continue;
+		}
+		return month;
+	}
+}
+void addMonthData(double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths,bool isProfilSetup) {
+	if (!isProfilSetup) {
+		std::cout << "The profile is not set up.You need to go and set it up first.";
+	}
+
+
+	int month = readTargetMonth(profileMonths);
+
+	double income = readMoneyValue(INCOME_LABEL);
+	double expense = readMoneyValue(EXPENSE_LABEL);
+
+	profile[PROFILE_INCOME_INDEX][month - 1] += income;
+	profile[PROFILE_EXPENSE_INDEX][month - 1] += expense;
+
+	double currentBalance = profile[PROFILE_INCOME_INDEX][month - 1] - profile[PROFILE_EXPENSE_INDEX][month - 1];
+		
+	std::cout << "Balance for " << MONTH_NAMES[month-1] << " = " << (currentBalance > 0 ? "+" : "") << currentBalance << "\n";
+}
 void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT],int& profileMonths, bool& isProfileSetUp) {
 
 	switch (commandIndex) {
 	case SETUP_INDEX:
 		setupProfile(profile, profileMonths, isProfileSetUp);
 		break;
-
+	case ADD_INDEX:
+		addMonthData(profile, profileMonths,isProfileSetUp);
+		break;
 	}
 }
 void runApplication() {
