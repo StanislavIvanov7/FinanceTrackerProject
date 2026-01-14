@@ -44,6 +44,10 @@ const char* MONTH_NAMES[] = {
 	"January", "February", "March", "April", "May", "June",
 	"July", "August", "September", "October", "November", "December"
 };
+const char* MONTH_ABBREVIATIONS[MONTHS_MAX_VALUE] = {
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
 
 bool isLetterLowerCase(const char letter) {
 	return letter >= 'a' && letter <= 'z';
@@ -170,7 +174,8 @@ int readTargetMonth(int maxMonths) {
 }
 void addMonthData(double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths,bool isProfilSetup) {
 	if (!isProfilSetup) {
-		std::cout << "The profile is not set up.You need to go and set it up first.";
+		std::cout << "The profile is not set up.You need to go and set it up first.\n";
+		return;
 	}
 
 
@@ -186,6 +191,56 @@ void addMonthData(double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths,b
 		
 	std::cout << "Balance for " << MONTH_NAMES[month-1] << " = " << (currentBalance > 0 ? "+" : "") << currentBalance << "\n";
 }
+
+void generateReportTable(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, double& totalIncome, double& totalExpense, int& activeMonths) {
+	std::cout.precision(2);
+	std::cout.setf(std::ios::fixed, std::ios::floatfield);
+
+	std::cout << "Month | Income | Expense | Balance " << std::endl;
+	std::cout << "---------------------------------- " << std::endl;
+
+	
+	for (int month = 0; month < profileMonths; month++) {
+		if (profile[PROFILE_INCOME_INDEX][month] != DEFAULT_MONTH_EMPTY_VALUE ||
+			profile[PROFILE_EXPENSE_INDEX][month] != DEFAULT_MONTH_EMPTY_VALUE) {
+			double currentIncome = profile[PROFILE_INCOME_INDEX][month];
+			double currentExpense = profile[PROFILE_EXPENSE_INDEX][month];
+			double currentBalance = currentIncome - currentExpense;
+
+			totalIncome += currentIncome;
+			totalExpense += currentExpense;
+			activeMonths++;
+
+			std::cout << MONTH_ABBREVIATIONS[month] << " | " << currentIncome << " | " << currentExpense << " | " << currentBalance << std::endl;
+		}
+	}
+
+	std::cout << "------------------------------------------------------------" << std::endl;
+
+	std::cout << "Total income: " << totalIncome << std::endl;
+	std::cout << "Total expense: " << totalExpense << std::endl;
+}
+
+void displayReport(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, bool isProfileSetup) {
+	if (!isProfileSetup) {
+		std::cout << "The profile is not set up.You need to go and set it up first.\n";
+		return;
+	}
+
+	double totalIncome = 0;
+	double totalExpense = 0;
+	int activeMonths = 0;
+	generateReportTable(profile,profileMonths, totalIncome, totalExpense, activeMonths);
+	
+	
+	if (activeMonths > 0) {
+		double averageBalance = (totalIncome - totalExpense) / activeMonths;
+		std::cout << "Average Balance: " << (averageBalance > 0 ? "+" : "") << averageBalance << std::endl;
+	}
+	else {
+		std::cout << "Average Balance: 0.00 (No active months)" << std::endl;
+	}
+}
 void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT],int& profileMonths, bool& isProfileSetUp) {
 
 	switch (commandIndex) {
@@ -194,6 +249,9 @@ void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT],i
 		break;
 	case ADD_INDEX:
 		addMonthData(profile, profileMonths,isProfileSetUp);
+		break;
+	case REPORT_INDEX:
+		displayReport(profile, profileMonths, isProfileSetUp);
 		break;
 	}
 }
