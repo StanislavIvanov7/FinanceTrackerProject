@@ -1,20 +1,184 @@
-// FinanceTrackerProject.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+/**
+*
+* Solution to course project # 03
+* Introduction to programming course
+* Faculty of Mathematics and Informatics of Sofia University
+* Winter semester 2025/2026
+*
+* @author Staislav Ivanov
+* @idnumber 6MI0600586
+* @compiler VC
+*
+* The implementation of the finance tracker project.
+*
+*/
 
 #include <iostream>
 
-int main()
-{
-    std::cout << "Hello World!\n";
+const int PROFILE_ROW = 2;
+const int MONTHS_COUNT = 12;
+const int COMMAND_MAX_SIZE = 1024;
+const int SETUP_INDEX = 0;
+const int ADD_INDEX = 1;
+const int REPORT_INDEX = 2;
+const int SEARCH_INDEX = 3;
+const int SORT_INDEX = 4;
+const int FORECAST_INDEX = 5;
+const int CHART_INDEX = 6;
+const int EXIT_INDEX = 7;
+const int FAIL_CODE_INDEX = -1;
+const int COMMANDS_COUNT = 8;
+const int IGNORE_CHARACTERS_COUNT = 1024;
+const int MONTHS_MIN_VALUE = 1;
+const int MONTHS_MAX_VALUE = 12;
+const int PROFILE_INCOME_INDEX = 0;
+const int PROFILE_EXPENSE_INDEX = 1;
+const int DEFAULT_MONTH_EMPTY_VALUE = 0;
+const char* COMMANDS[] = {
+		"SETUP", "ADD", "REPORT", "SEARCH", "SORT", "FORECAST",
+		"CHART", "EXIT"
+};
+
+bool isLetterLowerCase(const char letter) {
+	return letter >= 'a' && letter <= 'z';
+}
+void toUpper(char* word) {
+
+	if (!word) {
+		return;
+	}
+
+	while (*word) {
+		if (isLetterLowerCase(*word)) {
+			*word = *word - 'a' + 'A';
+		}
+
+		word++;
+	}
+
+}
+bool areEqual(const char* firstString, const char* secondString) {
+	if (!firstString || !secondString) {
+		return false;
+	}
+
+	while (*firstString && *secondString) {
+		if (*firstString != *secondString) {
+			return false;
+		}
+		firstString++;
+		secondString++;
+	}
+
+	return *firstString == '\0' && *secondString == '\0';
+}
+int getCommandIndex(const char* command) {
+	if (!command) {
+		return FAIL_CODE_INDEX;
+	}
+
+
+
+	for (int i = 0; i < COMMANDS_COUNT; i++)
+	{
+		if (areEqual(command, COMMANDS[i])) {
+			return i;
+		}
+	}
+
+	return FAIL_CODE_INDEX;
+}
+bool isInputInvalid() {
+	if (std::cin.fail()) {
+		std::cin.clear();
+		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
+		std::cout << "Error: Please enter a valid number.\n";
+
+		return true;
+	}
+
+	return false;
+}
+void setupProfile(double profile[PROFILE_ROW][MONTHS_COUNT], int& profileMonths, bool& isProfileSetup) {
+	
+	if (isProfileSetup) {
+		std::cout << "Error: Profile is already set up!\n";
+		return;
+	}
+
+	while (true) { 
+		std::cout << "Enter number of months: ";
+		std::cin >> profileMonths;
+
+		if (isInputInvalid()) {
+			continue;
+		}
+
+		if (profileMonths < MONTHS_MIN_VALUE || profileMonths > MONTHS_MAX_VALUE) {
+			std::cout << "Invalid number of months! Range: "
+				<< MONTHS_MIN_VALUE << " - " << MONTHS_MAX_VALUE << ".\n";
+			continue;
+		}
+
+		break;
+	}
+
+	for (int month = 0; month < profileMonths; month++) {
+		profile[PROFILE_INCOME_INDEX][month] = DEFAULT_MONTH_EMPTY_VALUE;
+		profile[PROFILE_EXPENSE_INDEX][month] = DEFAULT_MONTH_EMPTY_VALUE;
+	}
+
+	std::cout << "Profile created successfully.\n";
+	isProfileSetup = true;
+}
+void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT],int& profileMonths, bool& isProfileSetUp) {
+
+	switch (commandIndex) {
+	case SETUP_INDEX:
+		setupProfile(profile, profileMonths, isProfileSetUp);
+		break;
+
+	}
+}
+void runApplication() {
+	int profileMonths = 0;
+	double profile[PROFILE_ROW][MONTHS_COUNT] = { 0 };
+	char command[COMMAND_MAX_SIZE];
+	bool isProfileSetup = false;
+	std::cout << "Enter a command.\n";
+	std::cin >> command;
+
+	while (true) {
+		toUpper(command);
+		int commandIndex = getCommandIndex(command);
+
+		if (commandIndex == EXIT_INDEX) {
+			
+			return;
+		}
+
+		if (isProfileSetup && commandIndex == SETUP_INDEX) {
+			std::cout << "The profile has already been set up.\n";
+			std::cin >> command;
+			continue;
+		}
+
+		if (commandIndex == FAIL_CODE_INDEX) {
+			std::cout << "Error: Unknown command.Try again.\n";
+			std::cin >> command;
+			continue;
+		}
+
+		handleCommand(commandIndex, profile,profileMonths, isProfileSetup);
+
+		std::cin >> command;
+	}
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+int main()
+{
+	runApplication();
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+	return 0;
+}
+
