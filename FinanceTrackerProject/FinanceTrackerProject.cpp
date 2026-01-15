@@ -37,6 +37,8 @@ const int DEFAULT_MONTH_EMPTY_VALUE = 0;
 const double PERCENT_MULTIPLIER = 100.0;
 const int CRITERIAS_COUNT = 3;
 const int SORTING_TOP_COUNT = 3;
+const int CHART_STEP = 500;
+const int ALIGNMENT_THRESHOLD = 1000;
 const char* INCOME_LABEL = "income";
 const char* EXPENSE_LABEL = "expense";
 const char* COMMANDS[] = {
@@ -224,7 +226,8 @@ void addMonthData(double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, 
 	std::cout << " = " << (currentBalance > 0 ? "+" : "") << currentBalance << "\n";
 }
 
-void generateReportTable(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, double& totalIncome, double& totalExpense, int& activeMonths) {
+void generateReportTable(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths,
+	double& totalIncome, double& totalExpense, int& activeMonths) {
 	std::cout.precision(2);
 	std::cout.setf(std::ios::fixed, std::ios::floatfield);
 
@@ -294,7 +297,8 @@ void printRatioInfo(double income, double expense) {
 		std::cout << "Expense ratio: 0.00% (No activity)\n";
 	}
 }
-void searchByMonth(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, bool isProfileSetup) {
+void searchByMonth(const double profile[PROFILE_ROW][MONTHS_COUNT], 
+	int profileMonths, bool isProfileSetup) {
 	if (!isProfileSetup) {
 		std::cout << "The profile is not set up.You need to go and set it up first.\n";
 		return;
@@ -340,7 +344,8 @@ int getIndexOfCriteria(const char* criteria) {
 
 
 }
-double getValueByCriteriaIndex(const double profile[PROFILE_ROW][MONTHS_COUNT], int monthIdx, int criteriaIndex) {
+double getValueByCriteriaIndex(const double profile[PROFILE_ROW][MONTHS_COUNT],
+	int monthIdx, int criteriaIndex) {
 	if (criteriaIndex == 0) {
 		return profile[PROFILE_INCOME_INDEX][monthIdx];
 	}
@@ -361,7 +366,8 @@ void swap(int& a, int& b) {
 	a = b;
 	b = temp;
 }
-void sortIndicesByCriteria(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, int* indices, int criteriaIndex) {
+void sortIndicesByCriteria(const double profile[PROFILE_ROW][MONTHS_COUNT],
+	int profileMonths, int* indices, int criteriaIndex) {
 	for (int i = 0; i < profileMonths - 1; i++) {
 		int maxIdx = i;
 		for (int j = i + 1; j < profileMonths; j++) {
@@ -375,7 +381,8 @@ void sortIndicesByCriteria(const double profile[PROFILE_ROW][MONTHS_COUNT], int 
 		swap(indices[i], indices[maxIdx]);
 	}
 }
-void printTopResults(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, const int* indices, int criteriaIndex) {
+void printTopResults(const double profile[PROFILE_ROW][MONTHS_COUNT],
+	int profileMonths, const int* indices, int criteriaIndex) {
 	int topCount = (profileMonths < SORTING_TOP_COUNT) ? profileMonths : SORTING_TOP_COUNT;
 
 	std::cout.precision(2);
@@ -424,7 +431,8 @@ void sortProfile(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMon
 double getAbsoluteValue(double value) {
 	return value < 0 ? -value : value;
 }
-void calculateFinancialStats(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, double& currentSavings, double& averageChange) {
+void calculateFinancialStats(const double profile[PROFILE_ROW][MONTHS_COUNT],
+	int profileMonths, double& currentSavings, double& averageChange) {
 	double totalBalance = 0;
 	int activeMonths = 0;
 
@@ -498,7 +506,86 @@ void predictFuture(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileM
 	printForecastResult(currentSavings, averageChange, monthsAhead);
 
 }
-void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT], int& profileMonths, bool& isProfileSetUp) {
+double getHighestValue(const double data[PROFILE_ROW][MONTHS_COUNT], int activeMonths, int criteriaIdx) {
+	double maxValue = 0;
+	for (int i = 0; i < activeMonths; i++) {
+		double currentValue = getValueByCriteriaIndex(data, i, criteriaIdx);
+		if (currentValue > maxValue) {
+			maxValue = currentValue;
+		}
+	}
+	return maxValue;
+}
+void printChartAxisMonths(double profile[PROFILE_ROW][MONTHS_MAX_VALUE], int profileMonths) {
+	for (int month = 0; month < profileMonths; month++) {
+	
+			std::cout << MONTH_ABBREVIATIONS[month] << " ";
+		
+	}
+
+	std::cout << std::endl;
+}
+void drawChart(double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, bool isProfileSetup) {
+	if (!isProfileSetup) {
+		std::cout << "The profile is not set up. You need to go and set it up first.\n";
+		return;
+	}
+
+	char criteriaInput[COMMAND_MAX_SIZE];
+	std::cout << "Enter criteria (income, expense, balance): ";
+	std::cin >> criteriaInput;
+	toUpper(criteriaInput);
+
+	int criteriaIdx = getIndexOfCriteria(criteriaInput);
+	if (criteriaIdx == FAIL_CODE_INDEX) {
+		std::cout << "Error: Invalid criteria. Please enter income, expense, or balance.\n";
+		return;
+	}
+
+	double peakValue = getHighestValue(profile, profileMonths, criteriaIdx);
+	if (peakValue <= 0) {
+		std::cout << "No positive data to display for " << criteriaInput << ".\n";
+		return;
+	}
+
+	int currentLevel = ((int)peakValue / CHART_STEP) * CHART_STEP;
+	if (currentLevel < peakValue) {
+		currentLevel += CHART_STEP;
+	}
+
+	std::cout << "=== YEARLY FINANCIAL " << criteriaInput << " CHART === " << std::endl;
+	std::cout << "     |\n";
+
+	for (int level = currentLevel; level >= CHART_STEP; level -= CHART_STEP) {
+		if (level < ALIGNMENT_THRESHOLD) {
+			std::cout << " ";
+		}
+
+		std::cout << level << " | ";
+
+		for (int month = 0; month < profileMonths; month++) {
+			double monthValue = getValueByCriteriaIndex(profile, month, criteriaIdx);
+			if (monthValue >= level) {
+				std::cout << " #  ";
+			}
+			else {
+				std::cout << "    ";
+			}
+		}
+		std::cout << "\n";
+	}
+
+
+	std::cout << "     ";
+	for (int i = 0; i < profileMonths; i++) {
+		std::cout << "----";
+	}
+	std::cout << "\n       ";
+
+	printChartAxisMonths(profile, profileMonths);
+}
+void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT],
+	int& profileMonths, bool& isProfileSetUp) {
 
 	switch (commandIndex) {
 	case SETUP_INDEX:
@@ -518,6 +605,9 @@ void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT], 
 		break;
 	case FORECAST_INDEX:
 		predictFuture(profile, profileMonths, isProfileSetUp);
+		break;
+	case CHART_INDEX:
+		drawChart(profile, profileMonths, isProfileSetUp);
 		break;
 	default:
 		std::cout << "Invalid command. Please try again." << std::endl;
