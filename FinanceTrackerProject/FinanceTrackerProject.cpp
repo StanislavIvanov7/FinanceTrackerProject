@@ -35,6 +35,8 @@ const int PROFILE_INCOME_INDEX = 0;
 const int PROFILE_EXPENSE_INDEX = 1;
 const int DEFAULT_MONTH_EMPTY_VALUE = 0;
 const double PERCENT_MULTIPLIER = 100.0;
+const int CRITERIAS_COUNT = 3;
+const int SORTING_TOP_COUNT = 3;
 const char* INCOME_LABEL = "income";
 const char* EXPENSE_LABEL = "expense";
 const char* COMMANDS[] = {
@@ -49,7 +51,11 @@ const char* MONTH_ABBREVIATIONS[MONTHS_MAX_VALUE] = {
 	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
-
+const char* CRITERIAS[CRITERIAS_COUNT] = {
+	"INCOME",
+	"EXPENSE",
+	"BALANCE"
+};
 bool isLetterLowerCase(const char letter) {
 	return letter >= 'a' && letter <= 'z';
 }
@@ -319,6 +325,101 @@ void searchByMonth(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileM
 
 	printRatioInfo(income, expense);
 }
+int getIndexOfCriteria(const char* criteria) {
+
+
+	if (!criteria) {
+		return FAIL_CODE_INDEX;
+	}
+	for (int i = 0; i < CRITERIAS_COUNT; i++) {
+		if (areEqual(criteria, CRITERIAS[i])) {
+			return i;
+		}
+	}
+	return FAIL_CODE_INDEX;
+
+
+}
+double getValueByCriteriaIndex(const double profile[PROFILE_ROW][MONTHS_COUNT], int monthIdx, int criteriaIndex) {
+	if (criteriaIndex == 0) {
+		return profile[PROFILE_INCOME_INDEX][monthIdx];
+	}
+
+	if (criteriaIndex == 1) {
+		return profile[PROFILE_EXPENSE_INDEX][monthIdx];
+	}
+
+	if (criteriaIndex == 2) {
+		return profile[PROFILE_INCOME_INDEX][monthIdx] - profile[PROFILE_EXPENSE_INDEX][monthIdx];
+	}
+
+	return FAIL_CODE_INDEX;
+}
+void swap(int& a, int& b) {
+
+	int temp = a;
+	a = b;
+	b = temp;
+}
+void sortIndicesByCriteria(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, int* indices, int criteriaIndex) {
+	for (int i = 0; i < profileMonths - 1; i++) {
+		int maxIdx = i;
+		for (int j = i + 1; j < profileMonths; j++) {
+			double valCurrent = getValueByCriteriaIndex(profile, indices[j], criteriaIndex);
+			double valMax = getValueByCriteriaIndex(profile, indices[maxIdx], criteriaIndex);
+
+			if (valCurrent > valMax) {
+				maxIdx = j;
+			}
+		}
+		swap(indices[i], indices[maxIdx]);
+	}
+}
+void printTopResults(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, const int* indices, int criteriaIndex) {
+	int topCount = (profileMonths < SORTING_TOP_COUNT) ? profileMonths : SORTING_TOP_COUNT;
+
+	std::cout.precision(2);
+	std::cout.setf(std::ios::fixed, std::ios::floatfield);
+
+	for (int i = 0; i < topCount; i++) {
+		int mIdx = indices[i];
+		double value = getValueByCriteriaIndex(profile, mIdx, criteriaIndex);
+
+		std::cout << MONTH_ABBREVIATIONS[mIdx] << ": ";
+	
+		if (criteriaIndex == 2 && value > 0) std::cout << "+";
+		std::cout << value << "\n";
+	}
+}
+void sortProfile(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, bool isProfileSetup) {
+	if (!isProfileSetup) {
+		std::cout << "The profile is not set up. You need to go and set it up first.\n";
+		return;
+	}
+
+	char criteria[COMMAND_MAX_SIZE];
+	std::cout << "Enter criteria (income, expense, balance): ";
+	std::cin >> criteria;
+	toUpper(criteria);
+
+	int criteriaIndex = getIndexOfCriteria(criteria);
+
+	if (criteriaIndex == FAIL_CODE_INDEX) {
+		std::cout << "Error: Invalid criteria. Please enter income, expense, or balance.\n";
+		return;
+	}
+
+	int indices[MONTHS_MAX_VALUE];
+	for (int i = 0; i < profileMonths; i++) {
+		indices[i] = i;
+	}
+
+	sortIndicesByCriteria(profile, profileMonths, indices, criteriaIndex);
+	
+	std::cout << "Sorted by monthly " << criteria << " (descending):\n";
+
+	printTopResults(profile, profileMonths, indices, criteriaIndex);
+}
 void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT], int& profileMonths, bool& isProfileSetUp) {
 
 	switch (commandIndex) {
@@ -334,7 +435,11 @@ void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT], 
 	case SEARCH_INDEX:
 		searchByMonth(profile, profileMonths, isProfileSetUp);
 		break;
+	case SORT_INDEX:
+		sortProfile(profile, profileMonths, isProfileSetUp);
+		break;
 	}
+	
 }
 void runApplication() {
 	int profileMonths = 0;
