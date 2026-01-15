@@ -519,8 +519,11 @@ void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT], 
 	case FORECAST_INDEX:
 		predictFuture(profile, profileMonths, isProfileSetUp);
 		break;
+	default:
+		std::cout << "Invalid command. Please try again." << std::endl;
+		break;
 	}
-
+	
 }
 void runApplication() {
 	int profileMonths = 0;
@@ -536,6 +539,7 @@ void runApplication() {
 
 		if (commandIndex == EXIT_INDEX) {
 
+			displayReport(profile, profileMonths, isProfileSetup);
 			return;
 		}
 
