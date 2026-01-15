@@ -198,7 +198,7 @@ void printCapitalized(const char* word) {
 		else {
 			std::cout << letter;
 		}
-		
+
 		word++;
 	}
 }
@@ -386,7 +386,7 @@ void printTopResults(const double profile[PROFILE_ROW][MONTHS_COUNT], int profil
 		double value = getValueByCriteriaIndex(profile, mIdx, criteriaIndex);
 
 		std::cout << MONTH_ABBREVIATIONS[mIdx] << ": ";
-	
+
 		if (criteriaIndex == 2 && value > 0) std::cout << "+";
 		std::cout << value << "\n";
 	}
@@ -415,10 +415,88 @@ void sortProfile(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMon
 	}
 
 	sortIndicesByCriteria(profile, profileMonths, indices, criteriaIndex);
-	
+
 	std::cout << "Sorted by monthly " << criteria << " (descending):\n";
 
 	printTopResults(profile, profileMonths, indices, criteriaIndex);
+}
+
+double getAbsoluteValue(double value) {
+	return value < 0 ? -value : value;
+}
+void calculateFinancialStats(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, double& currentSavings, double& averageChange) {
+	double totalBalance = 0;
+	int activeMonths = 0;
+
+	for (int i = 0; i < profileMonths; i++) {
+		double monthlyBalance = profile[PROFILE_INCOME_INDEX][i] - profile[PROFILE_EXPENSE_INDEX][i];
+
+		if (profile[PROFILE_INCOME_INDEX][i] != DEFAULT_MONTH_EMPTY_VALUE ||
+			profile[PROFILE_EXPENSE_INDEX][i] != DEFAULT_MONTH_EMPTY_VALUE) {
+			totalBalance += monthlyBalance;
+			activeMonths++;
+		}
+	}
+	if (activeMonths == 0) {
+		std::cout << "Error: Not enough data to create a forecast. Please add month data first.\n";
+		return;
+	}
+
+	currentSavings = totalBalance;
+	averageChange = totalBalance / activeMonths;
+}
+
+void printForecastResult(double currentSavings, double averageChange, int monthsAhead) {
+	if (averageChange >= 0) {
+		double predictedSavings = currentSavings + monthsAhead * averageChange;
+		std::cout << "Predicted savings after " << monthsAhead << " months: " << predictedSavings << "\n";
+	}
+	else {
+
+		if (currentSavings <= 0) {
+			std::cout << "Expected to run out of money: Already out of funds or in debt.\n";
+		}
+		else {
+			double monthsUntilZero = currentSavings / getAbsoluteValue(averageChange);
+			std::cout << "Expected to run out of money after " << (int)monthsUntilZero << " months.\n";
+		}
+	}
+}
+void predictFuture(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, bool isProfileSetup) {
+	if (!isProfileSetup) {
+		std::cout << "The profile is not set up. You need to go and set it up first.\n";
+		return;
+	}
+
+	int monthsAhead;
+	while (true) {
+		std::cout << "Enter months ahead for forecast: ";
+		std::cin >> monthsAhead;
+
+		if (isInputInvalid()) {
+			continue;
+		}
+
+		if (monthsAhead < 0) {
+			std::cout << "Error: Months ahead cannot be negative!\n";
+			continue;
+		}
+		break;
+	}
+
+	double currentSavings = 0;
+	double averageChange = 0;
+
+	calculateFinancialStats(profile, profileMonths, currentSavings, averageChange);
+
+	std::cout.precision(2);
+	std::cout.setf(std::ios::fixed, std::ios::floatfield);
+
+	std::cout << "Current savings: " << currentSavings << "\n";
+	std::cout << "Average monthly change: " << (averageChange > 0 ? "+" : "") << averageChange << "\n";
+
+	printForecastResult(currentSavings, averageChange, monthsAhead);
+
 }
 void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT], int& profileMonths, bool& isProfileSetUp) {
 
@@ -438,8 +516,11 @@ void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT], 
 	case SORT_INDEX:
 		sortProfile(profile, profileMonths, isProfileSetUp);
 		break;
+	case FORECAST_INDEX:
+		predictFuture(profile, profileMonths, isProfileSetUp);
+		break;
 	}
-	
+
 }
 void runApplication() {
 	int profileMonths = 0;
