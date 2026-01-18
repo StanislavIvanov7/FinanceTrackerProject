@@ -14,7 +14,6 @@
 */
 
 #include <iostream>
-
 const int PROFILE_ROW = 2;
 const int MONTHS_COUNT = 12;
 const int COMMAND_MAX_SIZE = 1024;
@@ -99,8 +98,6 @@ int getCommandIndex(const char* command) {
 		return FAIL_CODE_INDEX;
 	}
 
-
-
 	for (int i = 0; i < COMMANDS_COUNT; i++)
 	{
 		if (areEqual(command, COMMANDS[i])) {
@@ -121,7 +118,8 @@ bool isInputInvalid() {
 
 	return false;
 }
-void setupProfile(double profile[PROFILE_ROW][MONTHS_COUNT], int& profileMonths, bool& isProfileSetup) {
+void setupProfile(double profile[PROFILE_ROW][MONTHS_COUNT],
+	int& profileMonths, bool& isProfileSetup) {
 
 	if (isProfileSetup) {
 		std::cout << "Error: Profile is already set up!\n";
@@ -189,7 +187,6 @@ void printCapitalized(const char* word) {
 		return;
 	}
 
-
 	std::cout << *word;
 	word++;
 	while (*word) {
@@ -204,7 +201,8 @@ void printCapitalized(const char* word) {
 		word++;
 	}
 }
-void addMonthData(double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, bool isProfilSetup) {
+void addMonthData(double profile[PROFILE_ROW][MONTHS_COUNT],
+	int profileMonths, bool isProfilSetup) {
 	if (!isProfilSetup) {
 		std::cout << "The profile is not set up.You need to go and set it up first.\n";
 		return;
@@ -226,8 +224,8 @@ void addMonthData(double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, 
 	std::cout << " = " << (currentBalance > 0 ? "+" : "") << currentBalance << "\n";
 }
 
-void generateReportTable(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths,
-	double& totalIncome, double& totalExpense, int& activeMonths) {
+void generateReportTable(const double profile[PROFILE_ROW][MONTHS_COUNT],
+	int profileMonths, double& totalIncome, double& totalExpense, int& activeMonths) {
 	std::cout.precision(2);
 	std::cout.setf(std::ios::fixed, std::ios::floatfield);
 
@@ -256,7 +254,8 @@ void generateReportTable(const double profile[PROFILE_ROW][MONTHS_COUNT], int pr
 	std::cout << "Total expense: " << totalExpense << std::endl;
 }
 
-void displayReport(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, bool isProfileSetup) {
+void displayReport(const double profile[PROFILE_ROW][MONTHS_COUNT],
+	int profileMonths, bool isProfileSetup) {
 	if (!isProfileSetup) {
 		std::cout << "The profile is not set up.You need to go and set it up first.\n";
 		return;
@@ -297,7 +296,7 @@ void printRatioInfo(double income, double expense) {
 		std::cout << "Expense ratio: 0.00% (No activity)\n";
 	}
 }
-void searchByMonth(const double profile[PROFILE_ROW][MONTHS_COUNT], 
+void searchByMonth(const double profile[PROFILE_ROW][MONTHS_COUNT],
 	int profileMonths, bool isProfileSetup) {
 	if (!isProfileSetup) {
 		std::cout << "The profile is not set up.You need to go and set it up first.\n";
@@ -506,7 +505,8 @@ void predictFuture(const double profile[PROFILE_ROW][MONTHS_COUNT], int profileM
 	printForecastResult(currentSavings, averageChange, monthsAhead);
 
 }
-double getHighestValue(const double data[PROFILE_ROW][MONTHS_COUNT], int activeMonths, int criteriaIdx) {
+double getHighestValue(const double data[PROFILE_ROW][MONTHS_COUNT],
+	int activeMonths, int criteriaIdx) {
 	double maxValue = 0;
 	for (int i = 0; i < activeMonths; i++) {
 		double currentValue = getValueByCriteriaIndex(data, i, criteriaIdx);
@@ -518,14 +518,15 @@ double getHighestValue(const double data[PROFILE_ROW][MONTHS_COUNT], int activeM
 }
 void printChartAxisMonths(double profile[PROFILE_ROW][MONTHS_MAX_VALUE], int profileMonths) {
 	for (int month = 0; month < profileMonths; month++) {
-	
-			std::cout << MONTH_ABBREVIATIONS[month] << " ";
-		
+
+		std::cout << MONTH_ABBREVIATIONS[month] << " ";
+
 	}
 
 	std::cout << std::endl;
 }
-void drawChart(double profile[PROFILE_ROW][MONTHS_COUNT], int profileMonths, bool isProfileSetup) {
+void drawChart(double profile[PROFILE_ROW][MONTHS_COUNT],
+	int profileMonths, bool isProfileSetup) {
 	if (!isProfileSetup) {
 		std::cout << "The profile is not set up. You need to go and set it up first.\n";
 		return;
@@ -613,7 +614,7 @@ void handleCommand(int commandIndex, double profile[PROFILE_ROW][MONTHS_COUNT],
 		std::cout << "Invalid command. Please try again." << std::endl;
 		break;
 	}
-	
+
 }
 void runApplication() {
 	int profileMonths = 0;
